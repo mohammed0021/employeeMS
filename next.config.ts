@@ -13,6 +13,14 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["pg", "pdf-parse", "mammoth"],
+  /**
+   * `forbidden()` and `notFound()` are navigation interrupts and are inert
+   * without this flag — a denied `pagePermission()` guard would otherwise
+   * throw an unhandled error and render a 500 instead of the 403 page.
+   */
+  experimental: {
+    authInterrupts: true
+  },
   async headers() {
     return [
       {

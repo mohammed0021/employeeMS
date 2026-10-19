@@ -96,7 +96,7 @@ docs/PERMISSIONS.md         role matrix (mirrors permissions.ts)
 |---|---|---|
 | 1 | Scaffold, routing, shell, permission matrix | ✅ done |
 | 2 | Auth, RBAC, guards, audit, Neon provisioning, seed | ✅ done |
-| 3 | Core HR: departments, employees, attendance, leave, payroll | 🟡 departments ✅; others in progress |
+| 3 | Core HR: departments, employees, attendance, leave, payroll | 🟡 backends ✅ + departments UI; other UIs in progress |
 | 4 | AI: RAG policy chatbot, feedback | ⬜ needs OpenRouter key |
 | 4b | ML: attrition model (scikit-learn, offline export) | ⬜ needs Python + dataset |
 | 5 | Reports, audit UI, Playwright E2E | ⬜ |
