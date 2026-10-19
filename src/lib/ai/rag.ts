@@ -44,10 +44,16 @@ type RawChunkRow = {
 /**
  * Retrieve the policy chunks most relevant to `query`.
  *
- * Ranking: full-text rank first; ILIKE-only hits (substring matches that the
- * tsquery misses, e.g. typos) sort after them because their rank is NULLS
- * LAST; ties break by chunk order so the prompt reads coherently. Degenerate
- * queries (<2 chars after trim) return [] without touching the database.
+ * Matching is OR-of-stemmed-lexemes, not plainto_tsquery's AND: a question
+ * like "How many annual leave days do I get?" must retrieve the Leave Policy
+ * even though the policy never contains "how" or "get" — AND semantics would
+ * return nothing and the chatbot would claim no policy covers it. Ranking by
+ * ts_rank against the same OR query still favours chunks that match more of
+ * the question's words. The whole-phrase ILIKE fallback stays for tokens
+ * stemming destroys (employee codes like EMP-001, quoted identifiers); those
+ * hits sort after FTS hits because their rank is NULLS LAST. Ties break by
+ * chunk order so the prompt reads coherently. Degenerate queries (<2 chars
+ * after trim) return [] without touching the database.
  */
 export async function retrieveContext(query: string, limit = 5): Promise<RetrievedChunk[]> {
   const trimmed = query.trim();
@@ -60,16 +66,23 @@ export async function retrieveContext(query: string, limit = 5): Promise<Retriev
       d.title AS "documentTitle",
       cd.section AS "section",
       cd.content AS "content",
-      ts_rank(to_tsvector('english', cd.content), plainto_tsquery('english', ${trimmed})) AS "score"
+      ts_rank(to_tsvector('english', cd.content), q.tsq) AS "score"
     FROM "PolicyChunk" cd
     JOIN "PolicyDocument" d ON d.id = cd."documentId"
+    CROSS JOIN LATERAL (
+      SELECT COALESCE(
+        to_tsquery('english', string_agg(quote_literal(lexeme) || ':*', ' | ')),
+        ''::tsquery
+      ) AS tsq
+      FROM unnest(to_tsvector('english', ${trimmed}))
+    ) q
     WHERE d.status = 'READY'
       AND (
-        to_tsvector('english', cd.content) @@ plainto_tsquery('english', ${trimmed})
+        to_tsvector('english', cd.content) @@ q.tsq
         OR cd.content ILIKE '%' || ${trimmed} || '%'
       )
     ORDER BY
-      ts_rank(to_tsvector('english', cd.content), plainto_tsquery('english', ${trimmed})) DESC NULLS LAST,
+      ts_rank(to_tsvector('english', cd.content), q.tsq) DESC NULLS LAST,
       cd."chunkIndex" ASC
     LIMIT ${limit}
   `;
