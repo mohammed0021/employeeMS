@@ -34,3 +34,23 @@ export async function pagePermission(
   if (!can(session.user.role, resource, action)) forbidden();
   return session;
 }
+
+/**
+ * Signed in AND holding **at least one** of the listed actions, else the 403 page.
+ *
+ * Needed because `readOwn` is a distinct matrix action from `read`. A page for
+ * a self-scoped module (employees, attendance, leave, payroll) must admit an
+ * EMPLOYEE via `readOwn`, while `pagePermission(resource, "read")` alone would
+ * bounce them from their own records — the guard is not the scoping; the
+ * service still restricts *which rows* they get.
+ */
+export async function pagePermissionAny(
+  resource: Resource,
+  ...actions: Action[]
+): Promise<Session> {
+  const session = await pageUser();
+  if (!actions.some((action) => can(session.user.role, resource, action))) {
+    forbidden();
+  }
+  return session;
+}

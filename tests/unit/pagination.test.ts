@@ -21,7 +21,10 @@ describe("parseListQuery bounds", () => {
 
   it("rejects an oversized limit instead of trusting it", () => {
     expect(parseListQuery(qs("limit=5000")).limit).toBe(PAGE_SIZE_DEFAULT);
-    expect(parseListQuery(qs("limit=100")).limit).toBe(100);
+    // The documented ceiling is exactly-at-limit, one over falls back.
+    expect(PAGE_SIZE_MAX).toBe(100);
+    expect(parseListQuery(qs(`limit=${PAGE_SIZE_MAX}`)).limit).toBe(PAGE_SIZE_MAX);
+    expect(parseListQuery(qs(`limit=${PAGE_SIZE_MAX + 1}`)).limit).toBe(PAGE_SIZE_DEFAULT);
     expect(parseListQuery(qs("limit=0")).limit).toBe(PAGE_SIZE_DEFAULT);
     expect(parseListQuery(qs("limit=abc")).limit).toBe(PAGE_SIZE_DEFAULT);
   });
