@@ -241,6 +241,13 @@ export async function decideLeaveRequest(
 ): Promise<LeaveRequestDto> {
   assert(actor, "approve");
 
+  // Re-enforced here even though the route schema already rejects it: a
+  // rejection must carry the reason the employee will read, so no caller
+  // path (seed, test, future route) can produce a silent rejection.
+  if (input.decision === "REJECTED" && !input.decisionReason?.trim()) {
+    throw errors.validation("A reason is required when rejecting a leave request.");
+  }
+
   const existing = await prisma.leaveRequest.findUnique({ where: { id } });
   if (!existing) throw errors.notFound("Leave request not found.");
 

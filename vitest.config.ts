@@ -11,10 +11,16 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["tests/unit/**/*.test.ts", "tests/integration/**/*.test.ts"],
-    // Integration tests hit TEST_DATABASE_URL; run them serially to keep
-    // truncate/reset logic deterministic.
+    // tests/setup.ts runs BEFORE any test file imports "@/lib/*" — it points
+    // EMS_DATABASE_URL at TEST_DATABASE_URL (see the file for the guards).
+    setupFiles: ["./tests/setup.ts"],
+    include: ["tests/**/*.test.ts"],
+    // One shared database: files must never run concurrently, or two suites
+    // would see (and clean up) each other's rows.
     fileParallelism: false,
+    testTimeout: 30_000,
+    // Fixture setup (scrypt hashes, Neon cold starts) can exceed the 5s default.
+    hookTimeout: 60_000,
     env: {
       NODE_ENV: "test",
     },

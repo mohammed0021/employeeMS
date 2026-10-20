@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ROLE_LABELS } from "./nav-config";
 import { SidebarNav } from "./sidebar-nav";
+import { SignOutButton } from "./sign-out-button";
 import type { Role } from "@/lib/auth/permissions";
 /**
  * Authenticated app shell: sidebar (role-filtered) + topbar.
@@ -40,6 +41,8 @@ export function AppShell({
               {userLabel}
             </span>
             <Badge variant="secondary">{ROLE_LABELS[role]}</Badge>
+            <Separator orientation="vertical" className="h-4" />
+            <SignOutButton />
           </div>
         </header>
         <main className="flex-1 bg-slate-50/60 p-4 md:p-6">{children}</main>

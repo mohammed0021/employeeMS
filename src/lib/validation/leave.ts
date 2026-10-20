@@ -33,11 +33,29 @@ export type SubmitLeaveInput = z.infer<typeof submitLeaveSchema>;
 
 // ─── PATCH intents ──────────────────────────────────────────────────────────
 
-const decisionIntent = z.object({
-  intent: z.literal("decision"),
-  decision: z.enum(["APPROVED", "REJECTED"]),
-  decisionReason: z.string().trim().max(500, "Decision reason must be 500 characters or fewer.").optional(),
-});
+const decisionIntent = z
+  .object({
+    intent: z.literal("decision"),
+    decision: z.enum(["APPROVED", "REJECTED"]),
+    decisionReason: z
+      .string()
+      .trim()
+      .max(500, "Decision reason must be 500 characters or fewer.")
+      .optional(),
+  })
+  .superRefine((value, ctx) => {
+    // A rejection the employee can't act on is not a decision, it's a door
+    // closing in their face: the reason is the only feedback they get, and
+    // it is what the audit trail and any later dispute rest on. Approvals
+    // stay reason-optional — nothing is being withheld there.
+    if (value.decision === "REJECTED" && !value.decisionReason) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["decisionReason"],
+        message: "A reason is required when rejecting a leave request.",
+      });
+    }
+  });
 
 const cancelIntent = z.object({
   intent: z.literal("cancel"),

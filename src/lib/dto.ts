@@ -31,9 +31,21 @@ export function canSeeSalary(role: Role): boolean {
   return role === "ADMIN" || role === "HR";
 }
 
-/** Exact decimal string, guarding against float rounding. */
+/**
+ * Exact decimal string, guarding against float rounding.
+ *
+ * Prisma's `Decimal.toString()` normalizes trailing zeros away ("1000.10" →
+ * "1000.1", "1000.00" → "1000"). Every column behind this mapper is a
+ * `Decimal(12, 2)` money column and the UI renders the string verbatim
+ * (payslips, CSV export), so restore the 2dp money scale here — string
+ * arithmetic only, no `Number` ever touches an amount.
+ */
 export function money(value: { toString(): string } | null | undefined): string | null {
-  return value == null ? null : value.toString();
+  if (value == null) return null;
+  const text = value.toString();
+  if (!text.includes(".")) return `${text}.00`;
+  const [whole, fraction = ""] = text.split(".");
+  return fraction.length >= 2 ? text : `${whole}.${fraction.padEnd(2, "0")}`;
 }
 
 export type EmployeeStatus = "ACTIVE" | "INACTIVE" | "ON_LEAVE";

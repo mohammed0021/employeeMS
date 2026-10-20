@@ -27,13 +27,24 @@ export type AuditEntry = {
 /** Keys that must never appear in audit metadata (defense in depth). */
 const FORBIDDEN_KEYS = /password|token|secret|apikey|api_key|authorization|hash/i;
 
+/**
+ * Documented boolean flags whose KEY trips the filter above but whose VALUE is
+ * a bare flag, never secret material. Reviewed case by case: `passwordReset`
+ * (services/admin-users.ts) is what distinguishes a forced credential rotation
+ * from an ordinary user edit in the audit trail, and it was being silently
+ * dropped by the filter — leaving USER_UPDATED rows that looked identical.
+ */
+const ALLOWED_FLAG_KEYS = new Set(["passwordReset"]);
+
 function sanitize(
   metadata: Record<string, unknown> | undefined,
 ): Record<string, unknown> | undefined {
   if (!metadata) return undefined;
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(metadata)) {
-    if (FORBIDDEN_KEYS.test(key)) continue;
+    if (FORBIDDEN_KEYS.test(key) && !(ALLOWED_FLAG_KEYS.has(key) && typeof value === "boolean")) {
+      continue;
+    }
     out[key] = value;
   }
   return out;

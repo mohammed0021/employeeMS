@@ -68,7 +68,10 @@ function toDateTime(value: string, baseDate: Date): Date {
 }
 
 function assertTimesOrdered(checkIn: Date | null, checkOut: Date | null): void {
-  if (checkIn && checkOut && checkOut.getTime() < checkIn.getTime()) {
+  // `<=`, not `<`: a zero-duration day (check-out === check-in) is just as
+  // meaningless as an out-before-in one, and the client's own refine rule
+  // (src/components/attendance/attendance-actions.tsx) rejects equality too.
+  if (checkIn && checkOut && checkOut.getTime() <= checkIn.getTime()) {
     throw errors.validation("Check-out must be after check-in.");
   }
 }

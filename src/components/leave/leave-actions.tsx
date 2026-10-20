@@ -243,6 +243,12 @@ export function DecideLeaveButtons({
   if (!canApprove || request.status !== "PENDING") return null;
 
   async function submit(decision: Decision) {
+    // Mirror the server rule for instant feedback; the server enforces it
+    // regardless, so this is UX only, never the security boundary.
+    if (decision === "REJECTED" && !reason.trim()) {
+      setServerError("A reason is required when rejecting a leave request.");
+      return;
+    }
     setBusy(true);
     setServerError(null);
     try {
@@ -316,13 +322,21 @@ export function DecideLeaveButtons({
           </DialogHeader>
 
           <div className="space-y-2">
-            <Label htmlFor="leave-reason">Reason (optional)</Label>
+            <Label htmlFor="leave-reason">
+              Reason{" "}
+              {open === "REJECTED" ? (
+                <span className="text-destructive">(required)</span>
+              ) : (
+                "(optional)"
+              )}
+            </Label>
             <Textarea
               id="leave-reason"
               rows={3}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Shown to the employee"
+              aria-required={open === "REJECTED" || undefined}
             />
           </div>
 
