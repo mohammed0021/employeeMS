@@ -73,18 +73,25 @@ function FormError({ message }: { message: string }) {
 
 function Field({
   label,
+  id,
   error,
   children,
 }: {
   label: string;
+  /** Explicit id shared with the control inside, so <Label htmlFor> actually points at it. */
+  id: string;
   error?: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="space-y-2">
-      <Label>{label}</Label>
+      <Label htmlFor={id}>{label}</Label>
       {children}
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? (
+        <p className="text-sm text-destructive" id={`${id}-error`}>
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -170,20 +177,20 @@ export function SubmitLeaveButton({ canCreate }: { canCreate: boolean }) {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="First day" error={errors.startDate?.message}>
-              <Input type="date" {...register("startDate")} />
+            <Field label="First day" id="leave-start-date" error={errors.startDate?.message}>
+              <Input type="date" id="leave-start-date" {...register("startDate")} />
             </Field>
-            <Field label="Last day" error={errors.endDate?.message}>
-              <Input type="date" {...register("endDate")} />
+            <Field label="Last day" id="leave-end-date" error={errors.endDate?.message}>
+              <Input type="date" id="leave-end-date" {...register("endDate")} />
             </Field>
           </div>
 
-          <Field label="Type" error={errors.type?.message}>
+          <Field label="Type" id="leave-type" error={errors.type?.message}>
             <Select
               value={watch("type")}
               onValueChange={(v) => setValue("type", v as LeaveType, { shouldValidate: true })}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full" id="leave-type" aria-describedby={errors.type ? "leave-type-error" : undefined}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -197,8 +204,13 @@ export function SubmitLeaveButton({ canCreate }: { canCreate: boolean }) {
             </Select>
           </Field>
 
-          <Field label="Reason" error={errors.reason?.message}>
-            <Textarea rows={3} placeholder="Why are you away?" {...register("reason")} />
+          <Field label="Reason" id="leave-reason-submit" error={errors.reason?.message}>
+            <Textarea
+              id="leave-reason-submit"
+              rows={3}
+              placeholder="Why are you away?"
+              {...register("reason")}
+            />
           </Field>
 
           {serverError ? <FormError message={serverError} /> : null}

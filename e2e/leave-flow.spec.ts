@@ -12,16 +12,16 @@ import { ACCOUNTS, login, logout, uniqueMarker, utcDateDaysAhead } from "./helpe
  * are located by their unique reason text, never by position, because the dev
  * database is shared and already holds real requests.
  *
- * A11Y BUG (src/components/leave/leave-actions.tsx:74-89): the dialog's Field
- * labels ("First day", "Last day", "Reason", "Type") render <Label> WITHOUT
- * htmlFor/id, so they are not programmatically associated with their inputs.
- * getByLabel() finds nothing; the test fills the date inputs positionally and
- * the reason via its placeholder.
+ * The submit dialog's Field labels ("First day", "Last day", "Type",
+ * "Reason") carry htmlFor/id associations
+ * (src/components/leave/leave-actions.tsx), so getByLabel() addresses each
+ * control directly — this spec previously filled the date inputs
+ * positionally because that association was missing.
  *
- * The decision dialog is different: its label DOES carry htmlFor="leave-reason"
- * (leave-actions.tsx:325-332) and renders "Reason (required)" for REJECTED vs
- * "(optional)" for APPROVED — asserted below, together with the client-side
- * block on an empty rejection reason (leave-actions.tsx:248-251).
+ * The decision dialog renders "Reason (required)" for REJECTED vs
+ * "(optional)" for APPROVED and blocks an empty rejection client-side —
+ * asserted below, alongside the server's own refusal, which the dialog
+ * surfaces verbatim.
  */
 test.describe("leave workflow", () => {
   test("employee2 submits an ANNUAL request and HR blocks an empty rejection, then approves", async ({
@@ -43,16 +43,15 @@ test.describe("leave workflow", () => {
     // Start ~30 days out, end two days later (3 calendar days inclusive).
     const startDay = utcDateDaysAhead(30);
     const endDay = utcDateDaysAhead(32);
-    const dateInputs = dialog.locator('input[type="date"]');
-    await dateInputs.nth(0).fill(startDay); // "First day"
-    await dateInputs.nth(1).fill(endDay); // "Last day"
+    await dialog.getByLabel("First day").fill(startDay);
+    await dialog.getByLabel("Last day").fill(endDay);
 
     // Confirm the leave type explicitly through the (Base UI) select rather
     // than trusting the ANNUAL default.
-    await dialog.getByRole("combobox").click();
+    await dialog.getByLabel("Type").click();
     await page.getByRole("option", { name: "Annual", exact: true }).click();
 
-    await dialog.getByPlaceholder("Why are you away?").fill(reason);
+    await dialog.getByLabel("Reason").fill(reason);
     await dialog.getByRole("button", { name: "Submit request" }).click();
 
     // Success toast (sonner, top-right) + the row lands in "My leave".

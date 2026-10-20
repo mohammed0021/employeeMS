@@ -97,10 +97,24 @@ docs/PERMISSIONS.md         role matrix (mirrors permissions.ts)
 | 1 | Scaffold, routing, shell, permission matrix | ✅ done |
 | 2 | Auth, RBAC, guards, audit, Neon provisioning, seed | ✅ done |
 | 3 | Core HR: departments, employees, attendance, leave, payroll | ✅ done (backends + UIs, live-verified) |
-| 4 | AI: RAG policy chatbot, feedback | ⬜ needs OpenRouter key |
-| 4b | ML: attrition model (scikit-learn, offline export) | ⬜ needs Python + dataset |
-| 5 | Reports, audit UI, Playwright E2E | ⬜ |
-| 6 | GitHub + Vercel deploy | ⬜ needs repo |
+| 4 | AI: RAG policy chatbot, feedback | ✅ built end-to-end; live answers need `OPENROUTER_API_KEY` (verified with `AI_MOCK=1` + the honest 503 path) |
+| 4b | ML: attrition model (scikit-learn, offline export) | ✅ inference + dashboard done; needs Python + IBM dataset to produce `models/attrition-model.json` |
+| 5 | Reports, audit UI, Playwright E2E | ✅ done (8/8 E2E) |
+| 6 | GitHub + Vercel deploy | ⬜ needs repo (`gh` CLI not installed) |
+
+Test suites (Phase 5's other half):
+
+| Suite | Runner | Scope | Verified against |
+|---|---|---|---|
+| Integration | vitest (`npm test`) | 134 tests / 15 files — service layer, RBAC scoping, Decimal-exact payroll, immutability, RAG retrieval, honest AI failures | disposable schema-only Neon branch `test-db` (`TEST_DATABASE_URL`); setup hard-fails if the test host ever equals production |
+| E2E | Playwright (`npm run test:e2e`) | 8 tests / 5 specs — login, logout, unauth redirect, cross-role 403s, full leave journey, chatbot honest-failure, change-password validation | real `next dev` server + Chromium |
+
+AI/ML configuration, deliberately three-state so nothing is ever fabricated:
+`OPENROUTER_API_KEY` + `AI_MODEL` set → live calls; `AI_MOCK=1` → deterministic
+stub that labels itself `mock` in `AiUsageLog`, message metadata and the UI;
+neither → 503 `AI_UNAVAILABLE` with the user's message still persisted. The
+attrition endpoint behaves the same way when no trained model file exists
+(503 `ATTRITION_MODEL_MISSING`, zero risk rows written).
 
 ## 7. Operational commands
 
@@ -111,7 +125,8 @@ npm run db:migrate     # prisma migrate dev  (direct endpoint)
 npm run db:seed        # demo data — idempotent, refuses NODE_ENV=production
 npm run create-admin   # idempotent ADMIN bootstrap
 node scripts/db-connectivity-test.mjs   # pooled + direct connectivity proof
-npx tsc --noEmit && npm run lint && npm test
+npx tsc --noEmit && npm run lint && npm test   # gate (needs TEST_DATABASE_URL)
+npm run test:e2e       # Playwright (needs a dev server on :3002)
 ```
 
 ## 8. Security posture (checklist)
@@ -123,4 +138,6 @@ npx tsc --noEmit && npm run lint && npm test
 - [x] Salary/PII redaction at the DTO boundary
 - [x] Generic 500s; raw SQL/DB errors never reach clients
 - [x] Audit trail append-only; sensitive keys filtered from metadata
-- [ ] AI key server-only (never `NEXT_PUBLIC_`) — Phase 4
+- [x] AI key server-only — read in `src/lib/ai/provider.ts`, never `NEXT_PUBLIC_`
+- [x] Every LLM call goes through one choke point (timeout, single attempt, per-user daily budget, metadata-only logging)
+- [x] No fabricated AI/ML results — mock is labelled everywhere; missing key/model is an honest 503
