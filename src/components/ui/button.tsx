@@ -1,3 +1,4 @@
+import { cloneElement, isValidElement, type ReactElement } from "react"
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
@@ -43,12 +44,50 @@ function Button({
   className,
   variant = "default",
   size = "default",
+  render,
+  nativeButton,
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+  const classes = cn(buttonVariants({ variant, size, className }))
+
+  // Two render targets, two mechanisms.
+  //
+  // 1. A non-button element via `render` (this app renders navigational
+  //    controls as `render={<Link/>}`, an <a>, in ~20 places) takes the shadcn
+  //    slot path: clone the caller's element with our styling instead of going
+  //    through Base UI. Base UI's Button validates the real DOM node and offers
+  //    only two choices, both wrong for a link — the default `nativeButton`
+  //    (true) warns when the node is an <a>, while `nativeButton={false}`
+  //    injects role="button" + Space activation onto it, mislabelling
+  //    navigation for assistive tech. A cloned <a>/<Link> keeps native link
+  //    semantics (role="link", Enter, open-in-new-tab) and makes the warning
+  //    impossible. Button-level props (children, title, aria-*, data-*) and the
+  //    element's own props/className survive the clone; a `data-slot` the
+  //    caller already set (pagination.tsx) wins over our default.
+  // 2. Anything else — no render (a plain native <button>), a real <button>
+  //    element, or an opaque render *function* — stays on Base UI with
+  //    `nativeButton` passed through: its runtime DOM check remains
+  //    authoritative for functions, and an explicit caller value still wins.
+  if (
+    isValidElement(render) &&
+    render.type !== "button" &&
+    render.type !== ButtonPrimitive &&
+    render.type !== Button
+  ) {
+    const own = render.props as Record<string, unknown>
+    return cloneElement(render as ReactElement<Record<string, unknown>>, {
+      ...props,
+      "data-slot": (own["data-slot"] as string | undefined) ?? "button",
+      className: cn(classes, own.className as string | undefined),
+    })
+  }
+
   return (
     <ButtonPrimitive
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={classes}
+      render={render}
+      nativeButton={nativeButton}
       {...props}
     />
   )

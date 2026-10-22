@@ -99,7 +99,7 @@ docs/PERMISSIONS.md         role matrix (mirrors permissions.ts)
 | 3 | Core HR: departments, employees, attendance, leave, payroll | ✅ done (backends + UIs, live-verified) |
 | 4 | AI: RAG policy chatbot, feedback | ✅ built end-to-end; live answers need `OPENROUTER_API_KEY` (verified with `AI_MOCK=1` + the honest 503 path) |
 | 4b | ML: attrition model (scikit-learn, offline export) | ✅ inference + dashboard done; needs Python + IBM dataset to produce `models/attrition-model.json` |
-| 5 | Reports, audit UI, Playwright E2E | ✅ done (8/8 E2E) |
+| 5 | Reports, audit UI, Playwright E2E | ✅ done (9/9 E2E) |
 | 6 | GitHub + Vercel deploy | ⬜ needs repo (`gh` CLI not installed) |
 
 Test suites (Phase 5's other half):
@@ -107,7 +107,7 @@ Test suites (Phase 5's other half):
 | Suite | Runner | Scope | Verified against |
 |---|---|---|---|
 | Integration | vitest (`npm test`) | 134 tests / 15 files — service layer, RBAC scoping, Decimal-exact payroll, immutability, RAG retrieval, honest AI failures | disposable schema-only Neon branch `test-db` (`TEST_DATABASE_URL`); setup hard-fails if the test host ever equals production |
-| E2E | Playwright (`npm run test:e2e`) | 8 tests / 5 specs — login, logout, unauth redirect, cross-role 403s, full leave journey, chatbot honest-failure, change-password validation | real `next dev` server + Chromium |
+| E2E | Playwright (`npm run test:e2e`) | 9 tests / 6 specs — login, logout, unauth redirect, cross-role 403s, full leave journey, chatbot honest-failure, change-password validation, Base UI Button console-cleanliness (no `nativeButton` warning anywhere; `render={<Link/>}` controls stay `role="link"`) | real `next dev` server + Chromium. Login attempts are rate-limited per IP+email (5 / 15 min, DB-backed, `src/lib/auth/rate-limit.ts`) and all specs share that budget — a blocked login surfaces as "Too many attempts" and stalls the login helper |
 
 AI/ML configuration, deliberately three-state so nothing is ever fabricated:
 `OPENROUTER_API_KEY` + `AI_MODEL` set → live calls; `AI_MOCK=1` → deterministic
