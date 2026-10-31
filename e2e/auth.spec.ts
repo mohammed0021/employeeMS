@@ -48,6 +48,14 @@ test.describe("authentication", () => {
     await expect(page.locator("header").getByText("Administrator", { exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Users & roles" })).toBeVisible();
 
+    // FR10: the dashboard reads live aggregates from the reports service, so
+    // every stat card carries a counted value rather than the Phase-1 `—`
+    // placeholder, and the sign-in that just happened is already audited.
+    await expect(page.getByText("Recent activity", { exact: true })).toBeVisible();
+    await expect(page.getByText("No audit events recorded yet.")).toHaveCount(0);
+    await expect(page.getByText(/^—$/)).toHaveCount(0);
+    await expect(page.getByText(/last 30 days/)).toBeVisible();
+
     // Logout now goes through the real topbar control (SignOutButton), which
     // revokes the session server-side before clearing the cookie.
     await logout(page);
