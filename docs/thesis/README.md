@@ -85,5 +85,5 @@ Figure 4.18 Employee Chatbot View ..............................................
 
 - **UAT (§5.6):** the instrument exists (`docs/UAT-QUESTIONNAIRE.md`) but has NOT been administered to real participants yet. §5.6 is worded so nothing is fabricated; after you run the sessions with your supervisor/classmates, fill Part E of the questionnaire and optionally add the mean Likert scores to §5.6.
 - **Attrition model (§5.9):** untrained — needs Python + the Kaggle IBM CSV. `scripts/train-attrition.py` is ready.
-- **AI chatbot:** unconfigured key → honest-unavailable mode (asserted by E2E). `AI_MOCK=1` gives a clearly-badged deterministic stub for demo screenshots if desired.
+- **AI chatbot:** configured with the OpenRouter key and verified live (grounded answer + source citation, 8–9 s); the unconfigured honest-failure branch stays covered by the E2E scenario and runs whenever the key is absent. Free-tier model `dots-studio/dots-3-note-preview:free` (the original `meta-llama/llama-3.3-70b-instruct:free` slug no longer exists — OpenRouter returned 404). One transient empty-completion was observed; the E2E tolerates exactly one resend.
 - **Deployment (Phase 6):** still open — no remote/GitHub/Vercel account connected.

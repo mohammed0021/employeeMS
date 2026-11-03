@@ -1,7 +1,7 @@
 # Chapter 4 figures — UI screenshots
 
 Captured from the production build (`next build` + `next start`) on
-2026-10-31T09:16:29.745Z at 1440×900 @2x, full-page.
+2026-11-03T13:21:37.263Z at 1440×900 @2x, full-page.
 
 Source: `scripts/capture-screenshots.mjs`.
 

@@ -137,6 +137,8 @@ The chat interface (Figures 4.8 and 4.18) follows one overriding rule from the n
 
 All model calls pass through a single gateway module that enforces a request timeout, a single attempt per request (free-tier quotas are never hammered by retries), a per-user daily budget, and a usage log recording timing and token counts — metadata only, never the text of prompts or answers, so policy content cannot leak through the AI usage log.
 
+The retrieval loop was verified against the live provider during final testing: the exchange shown in Figure 4.18 is a real question-and-answer round trip, where the reply states the 20-day entitlement and 14-day notice period from the indexed company leave policy and carries that document as its visible source.
+
 ### 4.3.5 AI-assisted performance feedback (FR08)
 
 The feedback module drafts evaluation summaries from an employee's own recorded indicators — attendance rate, leave usage, and related figures — through the same single AI gateway. Crucially, a draft is never published automatically: it is stored with status "draft", clearly labelled as machine-generated in the interface (Figure 4.9), and requires a human reviewer to approve it before it becomes the employee's official feedback. This implements the accuracy requirement of Chapter 3 directly in the workflow: AI output assists, a person decides.

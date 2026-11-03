@@ -140,6 +140,17 @@ async function main() {
         await page.goto(`${BASE}${route}`, { waitUntil: "networkidle" }).catch(() => {});
         await page.waitForTimeout(900);
 
+        // Chat figures are only useful showing an actual thread: open the
+        // newest conversation if one exists (the sidebar lists them newest
+        // first as a[href*="/chat?c="]).
+        if (route.startsWith("/chat")) {
+          const firstConv = page.locator('a[href*="/chat?c="]').first();
+          if ((await firstConv.count()) > 0) {
+            await firstConv.click().catch(() => {});
+            await page.waitForTimeout(1200);
+          }
+        }
+
         const idx = String(ORDER.indexOf(name) + 1).padStart(2, "0");
         const file = path.join(OUT, `${idx}-${slug(role)}-${slug(name)}.png`);
         await page.screenshot({ path: file, fullPage: true });

@@ -54,7 +54,7 @@ Functional testing drove the built interface in a real browser (Chromium) throug
 | 1 | Wrong password shows an inline error and stays on the sign-in page | — | Passed |
 | 2 | Successful sign-in reaches the dashboard, with live aggregates and audited activity; sign-out returns to /login | Admin | Passed |
 | 3 | Unauthenticated visit to a protected page redirects to /login | — | Passed |
-| 4 | With AI unconfigured, the assistant announces it, and a send fails inline without a fabricated reply (FR07 honesty) | Employee | Passed |
+| 4 | AI honesty in both configurations: unconfigured → the assistant announces it and a send fails inline without a fabricated reply; configured → one real, policy-grounded reply arrives (FR07) | Employee | Passed |
 | 5 | Console cleanliness: no framework warnings from UI components | — | Passed |
 | 6 | Full leave workflow: submit annual leave, blocked empty rejection, then approval (FR05) | Employee → HR | Passed |
 | 7 | Employee is forbidden from Users & roles and from Audit logs (FR01, FR11) | Employee | Passed |
@@ -163,7 +163,7 @@ Three limitations should be recorded honestly.
 
 First, the **attrition model artefact** was not trained within the project's execution environment: training requires the Python data-science stack (pandas, scikit-learn) and the IBM HR Analytics attrition dataset, and the training script (`scripts/train-attrition.py`) is delivered ready to run. Until the exported model file is produced, the attrition run endpoint responds with an explicit "model not trained" notice and the dashboard shows an honest empty state — by design the system never fabricates risk scores. The module's storage, permission, and inference paths are implemented and covered by integration tests.
 
-Second, the **live language-model provider** requires an API key that was not configured in the development environment; the chatbot and feedback modules therefore ran in their honest-unavailable mode during final verification, which is precisely the behaviour asserted by E2E scenario 4. The provider integration itself is implemented behind a single gateway with timeout, budget, and usage-logging controls.
+Second, the **live language-model provider** runs on OpenRouter's free tier, which carries two practical constraints: free models are rate-limited upstream and occasionally return an empty completion, so the end-to-end chat scenario permits exactly one resend before failing (the product's own inline guidance is "try again shortly"). During final verification the chatbot was exercised live: it answered a policy question in 8–9 seconds with an answer grounded in the indexed company leave policy and citing its source document. The honest-unavailable path (empty key → announced failure, no fabricated reply) remains covered by the same end-to-end scenario and was verified before the key was added. All model calls pass through a single gateway enforcing a timeout, a single attempt per request, a per-user daily budget, and metadata-only usage logging.
 
 Third, **deployment** (Phase 6) targets a free-tier cloud host; the application is production-build-verified locally, and the deployment procedure is documented, but a public URL was outside the scope completed for this thesis.
 

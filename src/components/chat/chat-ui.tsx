@@ -285,6 +285,27 @@ export function ChatUi({ conversations, active }: Props) {
   );
 }
 
+/**
+ * Models answer in Markdown, but the thread renders plain text — so the
+ * `**bold**` markers would show as literal asterisks. Render exactly that
+ * one construct (no general Markdown parser: an untrusted full parser is
+ * more risk than this UI needs) and leave every other character as typed.
+ */
+function RichText({ text }: { text: string }) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.startsWith("**") && part.endsWith("**") && part.length > 4 ? (
+          <strong key={i}>{part.slice(2, -2)}</strong>
+        ) : (
+          <span key={i}>{part}</span>
+        ),
+      )}
+    </>
+  );
+}
+
 function MessageBubble({ message }: { message: MessageDto }) {
   const isUser = message.role === "USER";
 
@@ -296,7 +317,9 @@ function MessageBubble({ message }: { message: MessageDto }) {
           isUser ? "bg-primary text-primary-foreground" : "bg-muted text-foreground",
         ].join(" ")}
       >
-        <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+        <p className="whitespace-pre-wrap text-sm">
+          {isUser ? message.content : <RichText text={message.content} />}
+        </p>
 
         {!isUser && message.sources && message.sources.length > 0 ? (
           <div className="flex flex-wrap gap-1 border-t border-foreground/10 pt-2">
