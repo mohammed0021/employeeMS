@@ -1,0 +1,13 @@
+﻿employeeCode,name,department,position,status,joinDate
+EMP-001,Ayesha Khan,Engineering,Senior Software Engineer,ACTIVE,2022-03-14
+EMP-002,Bilal Malik,Engineering,Software Engineer,ACTIVE,2023-07-01
+EMP-012,Lucas Novak,Operations,Office Coordinator,ACTIVE,2025-06-10
+EMP-003,Carmen Ortiz,Engineering,QA Engineer,ACTIVE,2024-01-08
+EMP-004,Daniyal Rahman,Human Resources,HR Manager,ACTIVE,2021-09-20
+EMP-005,Elena Silva,Human Resources,Recruiter,ACTIVE,2024-05-06
+EMP-006,Farid Tran,Finance,Financial Analyst,ACTIVE,2023-02-13
+EMP-007,Grace Ueda,Finance,Accountant,ACTIVE,2022-11-02
+EMP-008,Hassan Vargas,Sales,Account Executive,ACTIVE,2023-04-17
+EMP-009,Iman Wright,Sales,Sales Development Rep,ACTIVE,2025-02-03
+EMP-010,Jonas Yilmaz,Marketing,Marketing Specialist,ACTIVE,2024-08-19
+EMP-011,Kiara Zhang,Operations,Operations Lead,ACTIVE,2021-06-07
